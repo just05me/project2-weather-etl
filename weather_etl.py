@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Для получения погоды из API
 def get_weather_data(city):
-    api_key = "bdc7d1928553766d0c06bee6ae6c9dcd"
+    api_key = "APIkey"
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     response = requests.get(url)
     data = response.json()
