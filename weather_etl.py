@@ -32,7 +32,7 @@ def connect_to_database():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="itsmyfirstlinux",
+        password="ur password",
         database="weather_db"
     )
     cursor = conn.cursor()
