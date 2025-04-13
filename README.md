@@ -1,119 +1,88 @@
-WeatherETL
+# Погодный ETL-пайплайн
 
-License Status
+Этот проект представляет собой ETL-пайплайн (Extract, Transform, Load) для получения погодных данных для указанного города через API OpenWeatherMap, их обработки и сохранения в базу данных MySQL. Пайплайн управляется с помощью Apache Airflow и запускается каждые 10 минут.
 
-WeatherETL — это ETL-процесс (Extract, Transform, Load) для сбора, обработки и хранения данных о погоде. Проект использует API OpenWeatherMap для получения погоды, pandas для обработки данных и MySQL для хранения. Автоматизация процесса реализована через Apache Airflow, который запускает задачу каждые 10 минут.
-Основные возможности
+## Структура проекта
 
-    Сбор данных: Получение текущей погоды (температура, скорость ветра) для указанного города через OpenWeatherMap API.
-    Обработка: Преобразование данных в DataFrame с помощью pandas и вывод средней температуры.
-    Хранение: Сохранение данных в MySQL базе данных.
-    Автоматизация: Планирование задач через Airflow DAG с интервалом в 10 минут.
+- weather_etl.py: Содержит логику ETL для получения, обработки и сохранения погодных данных.
+- dag_weather_etl.py: Определяет DAG Airflow для планирования и выполнения процесса ETL.
+- llmvenv/: Виртуальное окружение, содержащее все необходимые библиотеки Python.
 
-Технологии
+## Требования
 
-    Язык: Python 3.10+
-    Библиотеки:
-        requests — для работы с API.
-        pandas — для обработки данных.
-        mysql-connector-python — для подключения к MySQL.
-        apache-airflow — для автоматизации ETL-процесса.
-    База данных: MySQL.
-    Виртуальное окружение: Используется для изоляции зависимостей.
+- Python 3.8 или выше
+- Локально запущенный сервер MySQL с базой данных weather_db
+- Ключ API OpenWeatherMap (указан в коде для простоты)
 
-Структура проекта
+## Установка
 
-    weather_etl.py — основной скрипт с логикой ETL (сбор, обработка, сохранение данных).
-    weather_etl_dag.py — файл DAG для Airflow, планирующий выполнение задачи.
-    weather_db — база данных MySQL (создаётся автоматически при первом запуске).
+1. Склонируйте репозиторий:
+   ```
+   git clone <URL-репозитория>
+   cd <директория-репозитория>
+   ```
 
-Установка
+2. Активируйте виртуальное окружение:
+   ```
+   source llmvenv/bin/activate  # Для Linux/Mac
+   llmvenv\Scripts\activate     # Для Windows
+   ```
 
-Следуй этим шагам, чтобы настроить и запустить проект:
-Требования
+   Примечание: Все необходимые библиотеки (requests, pandas, mysql-connector-python, apache-airflow) находятся в виртуальном окружении llmvenv.
 
-    Python 3.10 или выше.
-    Установленный MySQL сервер.
-    Apache Airflow (настроенный локально или на сервере).
-    Виртуальное окружение с зависимостями.
+3. Настройте MySQL:
+   - Убедитесь, что сервер MySQL запущен.
+   - Создайте базу данных weather_db.
+   - При необходимости измените учетные данные в weather_etl.py (по умолчанию: user="root", password="itsmyfirstlinux").
 
-Шаги
+4. Настройте Airflow:
+   - Инициализируйте базу данных Airflow:
+     ```
+     airflow db init
+     ```
+   - Запустите веб-сервер и планировщик Airflow:
+     ```
+     airflow webserver --port 8080 &
+     airflow scheduler &
+     ```
 
-    Склонируйте репозиторий:
-    bash
+## Использование
 
-git clone https://github.com/username/WeatherETL.git
-Замени username на свой GitHub-ник.
-Перейдите в директорию проекта:
-bash
-cd WeatherETL
-Создайте и активируйте виртуальное окружение (если ещё не создано):
+1. DAG (weather_etl_dag) настроен на запуск каждые 10 минут и собирает погодные данные для Ташкента (можно изменить в weather_etl.py).
+2. Для ручного запуска DAG:
+   - Откройте интерфейс Airflow по адресу http://localhost:8080.
+   - Включите и запустите weather_etl_dag.
+3. Для запуска ETL-скрипта вручную:
+   ```
+   python weather_etl.py
+   ```
 
-    Создание:
-    bash
+## Настройка
 
-python -m venv weatherenv
-Активация:
+- Город: Измените переменную city в weather_etl.py для получения данных о погоде другого города (по умолчанию: Tashkent).
+- Ключ API: Ключ OpenWeatherMap указан в weather_etl.py. Замените его на свой при необходимости.
+- База данных: Настройте параметры подключения к MySQL в weather_etl.py в соответствии с вашей средой.
 
-    Windows:
-    bash
+## Схема базы данных
 
-weatherenv\Scripts\activate
-Linux/MacOS:
-bash
+Пайплайн создает таблицу weather в базе данных weather_db со следующей структурой:
 
-        source weatherenv/bin/activate
+```
+CREATE TABLE weather (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    city VARCHAR(50),
+    temp FLOAT,
+    wind FLOAT,
+    date VARCHAR(50)
+);
+```
 
-Установите зависимости:
-bash
-pip install requests pandas mysql-connector-python apache-airflow
-Настройте MySQL:
+## Примечания
 
-    Убедись, что MySQL работает на localhost с пользователем root и паролем itsmyfirstlinux (или измени параметры в weather_etl.py под свои).
-    База данных weather_db будет создана автоматически.
+- Виртуальное окружение llmvenv содержит все зависимости, поэтому установка дополнительных библиотек не требуется, если вы не добавляете новый функционал.
+- Убедитесь, что сервер MySQL работает перед запуском пайплайна.
+- DAG начинает работу с 1 апреля 2025 года, как указано в dag_weather_etl.py.
 
-Настройте Airflow:
+## Лицензия
 
-    Помести weather_etl_dag.py в папку dags/ твоего Airflow (обычно ~/airflow/dags).
-    Убедись, что weather_etl.py доступен в той же директории или указан правильный путь в импорте.
-    Запусти Airflow:
-    bash
-
-        airflow webserver --port 8080
-        airflow scheduler
-    Настройте API ключ:
-        В weather_etl.py используется ключ OpenWeatherMap (bdc7d1928553766d0c06bee6ae6c9dcd). Зарегистрируйся на OpenWeatherMap и замени его на свой, если нужно.
-
-Использование
-
-    Ручной запуск (без Airflow):
-    bash
-
-    python weather_etl.py
-    Это выполнит ETL-процесс для города "Tashkent" и сохранит данные в MySQL.
-    Через Airflow:
-        Открой веб-интерфейс Airflow (обычно http://localhost:8080).
-        Найди DAG weather_etl_dag и включи его.
-        Задача будет запускаться каждые 10 минут автоматически.
-
-Пример вывода
-
-После запуска:
-text
-Средняя температура: 25.5
-Данные сохранены!
-
-Проверь данные в MySQL:
-sql
-SELECT * FROM weather;
-Конфигурация
-
-    Город: Измени переменную city в weather_etl.py на любой другой (например, "Moscow").
-    Интервал: Настрой schedule_interval в weather_etl_dag.py (сейчас каждые 10 минут: "*/10 * * * *").
-
-Требования
-
-    Python 3.10+.
-    MySQL сервер.
-    Airflow 2.x.
-    Зависимости: requests, pandas, mysql-connector-python, apache-airflow.
+Проект распространяется под лицензией MIT.
